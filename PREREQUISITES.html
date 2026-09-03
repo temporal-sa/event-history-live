@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temporal Debug Build — Setup Prerequisites / 준비 가이드</title>
+<style>
+  :root{
+    --paper:#f4f5f4;--card:#fff;--ink:#1a1d23;--ink-soft:#565d68;--rule:#e0e2df;
+    --accent:#1f6feb;--accent-soft:#e8f0fe;--ok:#1a7f37;--ok-soft:#e6f4ea;
+    --warn:#9a6700;--warn-soft:#fbf3dd;--code-bg:#11151c;--code-ink:#e6e9ee;
+    --code-dim:#7f8b9c;--code-grn:#7bd88f;--code-blu:#79b8ff;--code-amb:#e3b341;--maxw:56rem;
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  .wrap{background:var(--paper);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",Roboto,sans-serif;
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .col{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  code,pre,kbd{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  header.mast{background:var(--ink);color:var(--paper);padding:2.8rem 0 2.2rem;border-bottom:3px solid var(--accent)}
+  .eyebrow{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--code-blu);font-weight:600;margin:0 0 .8rem}
+  header.mast h1{font-size:2rem;line-height:1.12;margin:0;font-weight:700;letter-spacing:-.02em}
+  header.mast h1 .ko{display:block;font-size:1.35rem;color:#c7ccd4;font-weight:600;margin-top:.3rem}
+  header.mast p.sub{color:#b9bfc9;margin:1rem 0 0;max-width:60ch;font-size:.98rem}
+  .controls{position:sticky;top:0;z-index:5;background:rgba(244,245,244,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule);padding:.6rem 0}
+  .controls .col{display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center}
+  .ctl{display:flex;align-items:center;gap:.4rem}
+  .ctl .lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);font-weight:700}
+  .seg{display:inline-flex;border:1px solid var(--rule);border-radius:7px;overflow:hidden;background:var(--card)}
+  .seg button{border:0;background:transparent;padding:.32rem .7rem;font-size:.82rem;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--accent);color:#fff}
+  .print-hint{font-size:.72rem;color:var(--ink-soft);margin-left:auto}
+  section{padding:2rem 0;border-bottom:1px solid var(--rule)}
+  h2{font-size:1.3rem;margin:0 0 .2rem;font-weight:700;letter-spacing:-.01em;display:flex;gap:.6rem;align-items:baseline}
+  h2 .n{font-size:.78rem;color:#fff;background:var(--accent);border-radius:100px;min-width:1.6rem;height:1.6rem;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+  h2 .ko{font-size:.92rem;color:var(--ink-soft);font-weight:600}
+  h3{font-size:1rem;margin:1.4rem 0 .4rem;font-weight:650}
+  p{margin:.5rem 0}
+  .bil{margin:.5rem 0}
+  .lang-en,.lang-ko{position:relative;padding-left:2.6rem;margin:.35rem 0}
+  .lang-en::before,.lang-ko::before{position:absolute;left:0;top:.15rem;font-size:.6rem;font-weight:700;letter-spacing:.06em;padding:.1rem .35rem;border-radius:4px;font-family:ui-monospace,monospace}
+  .lang-en::before{content:"EN";background:var(--accent-soft);color:var(--accent)}
+  .lang-ko::before{content:"KO";background:#efe7f7;color:#7a3ea8}
+  #doc.show-en .lang-ko{display:none}
+  #doc.show-ko .lang-en{display:none}
+  .os{display:none}
+  #doc.os-macos .os-macos{display:block}
+  #doc.os-linux .os-linux{display:block}
+  pre{background:var(--code-bg);color:var(--code-ink);padding:.85rem 1rem;border-radius:8px;overflow-x:auto;font-size:.8rem;line-height:1.55;margin:.6rem 0;border:1px solid #232a35}
+  pre .c{color:var(--code-dim)}pre .g{color:var(--code-grn)}pre .b{color:var(--code-blu)}pre .a{color:var(--code-amb)}
+  code.inl{background:#e9ebe8;border:1px solid var(--rule);padding:.06em .35em;border-radius:4px;font-size:.85em}
+  kbd{background:var(--ink);color:var(--paper);border-radius:4px;padding:.05em .4em;font-size:.8em}
+  a{color:var(--accent)}
+  .callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:.7rem 1rem;border-radius:0 7px 7px 0;margin:.9rem 0;font-size:.92rem}
+  .callout.ok{border-color:var(--ok);background:var(--ok-soft)}
+  .callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .callout .h{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.2rem;color:var(--accent)}
+  .callout.ok .h{color:var(--ok)}.callout.warn .h{color:var(--warn)}
+  .verify{background:var(--ok-soft);border:1px solid #bfe0c8;border-radius:7px;padding:.5rem .8rem;margin:.5rem 0;font-size:.85rem}
+  table{border-collapse:collapse;width:100%;font-size:.85rem;margin:.6rem 0}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top}
+  th{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);border-bottom:2px solid var(--ink)}
+  .term{font-size:.62rem;font-weight:700;color:var(--ink-soft);background:#e9ebe8;border-radius:4px;padding:.08rem .35rem;font-family:ui-monospace,monospace;vertical-align:middle}
+  footer{padding:2rem 0 3rem;color:var(--ink-soft);font-size:.85rem}
+  @media(max-width:640px){header.mast h1{font-size:1.55rem}.lang-en,.lang-ko{padding-left:0;padding-top:1.3rem}.lang-en::before,.lang-ko::before{top:0}}
+
+  /* ---------- PRINT: show all OSes + both languages, light code, avoid splits ---------- */
+  @media print{
+    .controls{display:none !important}
+    .wrap{background:#fff}
+    header.mast{background:#fff;color:#000;border-bottom:2px solid #000;padding-top:0}
+    .eyebrow{color:#555}header.mast h1{color:#000}header.mast h1 .ko{color:#333}header.mast p.sub{color:#333}
+    #doc .os{display:block !important}
+    #doc .lang-en,#doc .lang-ko{display:block !important}
+    pre{background:#f5f5f5;color:#111;border:1px solid #ccc}
+    pre .c{color:#666}pre .g,pre .b,pre .a{color:#111}
+    a{color:#000;text-decoration:underline}
+    section,pre,table,.callout,.verify{break-inside:avoid}
+    h2 .n,.seg button.on{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .os-macos,.os-linux{border-top:1px dashed #bbb;margin-top:.6rem;padding-top:.4rem}
+    .os-macos::before{content:"▸ macOS";display:block;font-weight:700;font-size:.8rem;color:#000;margin-bottom:.3rem}
+    .os-linux::before{content:"▸ Linux / Windows (WSL2)";display:block;font-weight:700;font-size:.8rem;color:#000;margin-bottom:.3rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="mast"><div class="col">
+  <p class="eyebrow">Temporal Workshop · Prerequisites</p>
+  <h1>Build the Temporal Debug Server &amp; <code style="font-size:.85em">tdbg</code> from scratch
+    <span class="ko">Temporal 디버그 서버와 tdbg를 처음부터 빌드하기</span></h1>
+  <p class="sub">Git clone → dependencies (Docker, Go, GNU Make) → build → run. For macOS, Windows (WSL2), and Linux. No prior Go experience needed. / Git 클론부터 의존성 설치, 빌드, 실행까지. macOS·Windows(WSL2)·Linux 지원. Go 지식이 없어도 됩니다.</p>
+</div></header>
+
+<div class="controls"><div class="col">
+  <div class="ctl"><span class="lbl">OS</span>
+    <div class="seg" id="os-seg">
+      <button data-os="macos" class="on">macOS</button>
+      <button data-os="linux">Linux / Windows (WSL2)</button>
+    </div>
+  </div>
+  <div class="ctl"><span class="lbl">Language</span>
+    <div class="seg" id="lang-seg">
+      <button data-lang="both" class="on">Both</button>
+      <button data-lang="en">English</button>
+      <button data-lang="ko">한국어</button>
+    </div>
+  </div>
+  <span class="print-hint">Print / PDF shows all OSes + both languages · 인쇄 시 모든 OS·언어 포함</span>
+</div></div>
+
+<div id="doc" class="os-macos show-both"><div class="col">
+
+  <section>
+    <h2><span class="n">0</span> What you'll build <span class="ko">· 무엇을 빌드하나요</span></h2>
+    <div class="bil">
+      <p class="lang-en">You'll produce two command-line programs from Temporal's source code: <code class="inl">temporal-server-debug</code> (the Temporal server, built in debug mode with relaxed internal timeouts) and <code class="inl">tdbg</code> (a tool that decodes the raw data in the database). You'll also start the databases it needs with Docker.</p>
+      <p class="lang-ko">Temporal 소스 코드로부터 두 개의 명령줄 프로그램을 만듭니다: <code class="inl">temporal-server-debug</code>(내부 타임아웃이 완화된 디버그 모드 Temporal 서버)와 <code class="inl">tdbg</code>(데이터베이스의 원시 데이터를 해독하는 도구)입니다. 그리고 서버가 필요로 하는 데이터베이스를 Docker로 실행합니다.</p>
+    </div>
+    <div class="callout ok"><span class="h">You will NOT write any Go / Go 코드를 작성하지 않습니다</span>
+      <div class="bil">
+        <p class="lang-en"><code class="inl">make</code> runs the build recipes for you and Go compiles the code automatically. You only need Go <em>installed</em> so the compiler is available.</p>
+        <p class="lang-ko"><code class="inl">make</code>가 빌드 과정을 대신 실행하고 Go가 코드를 자동으로 컴파일합니다. 컴파일러를 쓸 수 있도록 Go를 <em>설치</em>만 하면 됩니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">1</span> System requirements <span class="ko">· 시스템 요구사항</span></h2>
+    <div class="bil">
+      <p class="lang-en">The database stack (MySQL, Elasticsearch, Cassandra, and more) runs in Docker and is memory-hungry. Have <strong>≥ 8 GB RAM free</strong> (allocate ≥ 6–8 GB to Docker Desktop), <strong>~ 15 GB free disk</strong>, and a stable internet connection (the first build downloads several hundred MB of Go packages and Docker images).</p>
+      <p class="lang-ko">데이터베이스 스택(MySQL, Elasticsearch, Cassandra 등)은 Docker에서 실행되며 메모리를 많이 사용합니다. <strong>여유 RAM 8GB 이상</strong>(Docker Desktop에 6~8GB 이상 할당), <strong>여유 디스크 약 15GB</strong>, 그리고 안정적인 인터넷 연결이 필요합니다(첫 빌드에서 수백 MB의 Go 패키지와 Docker 이미지를 내려받습니다).</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> Install the tools <span class="ko">· 도구 설치</span></h2>
+    <div class="bil">
+      <p class="lang-en">Pick your operating system with the <strong>OS</strong> switch above (on paper, both are shown). You need four tools: <strong>Git</strong>, <strong>Go 1.26.4+</strong>, <strong>GNU Make</strong>, and <strong>Docker</strong>. The Temporal CLI is a handy extra.</p>
+      <p class="lang-ko">위의 <strong>OS</strong> 스위치로 운영체제를 선택하세요(인쇄본에는 둘 다 표시됩니다). 네 가지 도구가 필요합니다: <strong>Git</strong>, <strong>Go 1.26.4 이상</strong>, <strong>GNU Make</strong>, <strong>Docker</strong>. Temporal CLI도 있으면 편리합니다.</p>
+    </div>
+
+    <div class="os os-macos">
+      <h3>macOS</h3>
+      <div class="bil">
+        <p class="lang-en">The easiest path is <a href="https://brew.sh">Homebrew</a>. If you don't have it, install it first, then install the tools. <code class="inl">xcode-select --install</code> provides Git and Make; Homebrew provides Go.</p>
+        <p class="lang-ko">가장 쉬운 방법은 <a href="https://brew.sh">Homebrew</a>입니다. 없다면 먼저 설치한 뒤 도구들을 설치하세요. <code class="inl">xcode-select --install</code>이 Git과 Make를 제공하고, Homebrew가 Go를 제공합니다.</p>
+      </div>
+<pre><span class="c"># 1) Xcode Command Line Tools (gives you git + make)</span>
+xcode-select --install
+
+<span class="c"># 2) Homebrew (skip if already installed)</span>
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+<span class="c"># 3) Go, and (optional) the Temporal CLI + a newer GNU Make</span>
+brew install go temporal make
+
+<span class="c"># 4) Docker Desktop — download &amp; install, then LAUNCH it once</span>
+<span class="c">#    https://www.docker.com/products/docker-desktop/  (Apple Silicon &amp; Intel)</span></pre>
+      <div class="callout"><span class="h">Apple Silicon note</span>
+        <div class="bil">
+          <p class="lang-en">Everything runs natively on M-series chips. In Docker Desktop, keep "Use Rosetta for x86/amd64 emulation" enabled (Settings → General) for the widest image compatibility.</p>
+          <p class="lang-ko">M 시리즈 칩에서 네이티브로 동작합니다. 이미지 호환성을 위해 Docker Desktop 설정(Settings → General)에서 "Use Rosetta for x86/amd64 emulation"을 켜 두세요.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="os os-linux">
+      <h3>Windows → first install WSL2 <span style="font-weight:400;color:var(--ink-soft)">/ Windows는 먼저 WSL2 설치</span></h3>
+      <div class="callout warn"><span class="h">Windows users start here / Windows 사용자 먼저</span>
+        <div class="bil">
+          <p class="lang-en">Temporal is built inside Linux. On Windows, install <strong>WSL2 + Ubuntu</strong>, then do <em>everything else</em> inside the Ubuntu terminal. Open <strong>PowerShell as Administrator</strong>, run the command below, reboot, then open "Ubuntu" from the Start menu.</p>
+          <p class="lang-ko">Temporal은 Linux 환경에서 빌드합니다. Windows에서는 <strong>WSL2 + Ubuntu</strong>를 설치한 뒤 <em>나머지 모든 작업</em>을 Ubuntu 터미널에서 진행하세요. <strong>PowerShell을 관리자 권한으로</strong> 열어 아래 명령을 실행하고, 재부팅한 다음 시작 메뉴에서 "Ubuntu"를 여세요.</p>
+        </div>
+      </div>
+<pre><span class="c"># Windows PowerShell (Administrator) — installs WSL2 + Ubuntu</span>
+wsl --install
+<span class="c"># reboot, then open "Ubuntu" and continue with the commands below</span></pre>
+
+      <h3>Ubuntu / WSL2 / Linux — Git, Make, Go</h3>
+      <div class="bil">
+        <p class="lang-en">Ubuntu's packaged Go is usually too old, so install Go from the official download. (For ARM machines, replace <code class="inl">amd64</code> with <code class="inl">arm64</code>.)</p>
+        <p class="lang-ko">Ubuntu 패키지의 Go는 대개 너무 오래되었으므로 공식 배포판으로 설치합니다. (ARM 머신은 <code class="inl">amd64</code>를 <code class="inl">arm64</code>로 바꾸세요.)</p>
+      </div>
+<pre><span class="c"># 1) Git + GNU Make</span>
+sudo apt update &amp;&amp; sudo apt install -y git make curl
+
+<span class="c"># 2) Go 1.26.4 (official) — remove any old Go, then install to /usr/local</span>
+curl -LO https://go.dev/dl/go1.26.4.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go &amp;&amp; sudo tar -C /usr/local -xzf go1.26.4.linux-amd64.tar.gz
+
+<span class="c"># 3) Put Go on your PATH (add this line to ~/.profile, then re-open the shell)</span>
+export PATH=$PATH:/usr/local/go/bin
+
+<span class="c"># 4) (optional) Temporal CLI</span>
+curl -sSf https://temporal.download/cli.sh | sh</pre>
+
+      <h3>Docker</h3>
+      <div class="bil">
+        <p class="lang-en"><strong>Windows (WSL2):</strong> install <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop for Windows</a>, then enable Settings → Resources → WSL Integration for your Ubuntu distro. <strong>Native Linux:</strong> install Docker Engine and add yourself to the <code class="inl">docker</code> group.</p>
+        <p class="lang-ko"><strong>Windows(WSL2):</strong> <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop for Windows</a>를 설치하고 Settings → Resources → WSL Integration에서 Ubuntu 배포판을 켜세요. <strong>네이티브 Linux:</strong> Docker Engine을 설치하고 본인 계정을 <code class="inl">docker</code> 그룹에 추가하세요.</p>
+      </div>
+<pre><span class="c"># Native Linux only (skip on Windows/WSL2 — Docker Desktop handles it)</span>
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER      <span class="c"># then log out and back in</span></pre>
+    </div>
+
+    <div class="verify"><strong>✔ Verify / 확인</strong> — run these; each should print a version:
+<pre style="margin:.4rem 0 0"><span class="b">git</span> --version
+<span class="b">go</span> version            <span class="c"># installed Go; the build auto-fetches 1.26.4 if needed</span>
+<span class="b">make</span> --version
+<span class="b">docker</span> --version
+<span class="b">docker</span> compose version</pre></div>
+    <div class="callout"><span class="h">Go version / Go 버전</span>
+      <div class="bil">
+        <p class="lang-en">If <code class="inl">go version</code> shows something older than 1.26.4, that's usually fine — modern Go automatically downloads the exact toolchain the project pins (<code class="inl">go 1.26.4</code> in <code class="inl">go.mod</code>) on the first build.</p>
+        <p class="lang-ko"><code class="inl">go version</code>이 1.26.4보다 낮게 나와도 보통 괜찮습니다 — 최신 Go는 첫 빌드 때 프로젝트가 지정한 정확한 툴체인(<code class="inl">go.mod</code>의 <code class="inl">go 1.26.4</code>)을 자동으로 내려받습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> Get the source code <span class="ko">· 소스 코드 받기</span></h2>
+    <div class="bil">
+      <p class="lang-en">Clone the Temporal server repository and move into it. All later commands run from this folder. <strong>On WSL2, clone inside the Linux home (<code class="inl">~</code>), not <code class="inl">/mnt/c</code></strong> — it's far faster.</p>
+      <p class="lang-ko">Temporal 서버 저장소를 클론하고 그 폴더로 이동합니다. 이후 모든 명령은 이 폴더에서 실행합니다. <strong>WSL2에서는 <code class="inl">/mnt/c</code>가 아니라 Linux 홈(<code class="inl">~</code>) 안에 클론하세요</strong> — 훨씬 빠릅니다.</p>
+    </div>
+<pre><span class="b">git</span> clone https://github.com/temporalio/temporal.git
+<span class="b">cd</span> temporal</pre>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span> Apply the workshop patch <span class="ko">· 워크숍 패치 적용</span></h2>
+    <div class="callout warn"><span class="h">Workshop-specific / 워크숍 전용</span>
+      <div class="bil">
+        <p class="lang-en">This one-line source change raises the workflow-task timeout cap from 120 s to 15 min, so you can hold a debugger breakpoint inside workflow code for up to 15 minutes. Skip it only if you want a plain debug build.</p>
+        <p class="lang-ko">이 한 줄짜리 소스 변경은 워크플로 태스크 타임아웃 상한을 120초에서 15분으로 올려, 워크플로 코드 안에서 디버거 중단점을 최대 15분까지 유지할 수 있게 합니다. 일반 디버그 빌드만 원하면 건너뛰어도 됩니다.</p>
+      </div>
+    </div>
+<pre><span class="c"># macOS (BSD sed):</span>
+sed -i '' 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
+  service/history/api/create_workflow_util.go
+
+<span class="c"># Linux / WSL2 (GNU sed):</span>
+sed -i 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
+  service/history/api/create_workflow_util.go
+
+<span class="c"># verify the change:</span>
+grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util.go
+<span class="c"># expected -> maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute</span></pre>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span> Build the binaries <span class="ko">· 바이너리 빌드</span></h2>
+    <div class="bil">
+      <p class="lang-en">Build the debug server, <code class="inl">tdbg</code>, and the schema tool. The <strong>first build is slow</strong> (it downloads all Go packages and may fetch the Go 1.26.4 toolchain) — several minutes is normal. Later builds are fast.</p>
+      <p class="lang-ko">디버그 서버, <code class="inl">tdbg</code>, 스키마 도구를 빌드합니다. <strong>첫 빌드는 느립니다</strong>(모든 Go 패키지를 내려받고 Go 1.26.4 툴체인을 가져올 수 있음) — 몇 분 걸리는 것이 정상입니다. 이후 빌드는 빠릅니다.</p>
+    </div>
+<pre><span class="b">make</span> temporal-server-debug     <span class="c"># -> ./temporal-server-debug</span>
+<span class="b">make</span> tdbg                       <span class="c"># -> ./tdbg</span>
+<span class="b">make</span> temporal-sql-tool           <span class="c"># -> ./temporal-sql-tool (installs the DB schema)</span></pre>
+    <div class="verify"><strong>✔ Verify / 확인</strong>
+<pre style="margin:.4rem 0 0"><span class="b">ls</span> -la temporal-server-debug tdbg temporal-sql-tool   <span class="c"># three files exist</span>
+./tdbg --help | head</pre></div>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span> Start the databases <span class="ko">· 데이터베이스 실행</span> <span class="term">Terminal 1</span></h2>
+    <div class="bil">
+      <p class="lang-en">This starts MySQL, the Temporal Web UI, and other services with Docker Compose. It keeps running — <strong>leave this terminal open</strong> and open a new one for the next steps. Make sure Docker Desktop is running first.</p>
+      <p class="lang-ko">Docker Compose로 MySQL, Temporal 웹 UI 등을 실행합니다. 계속 실행 상태로 유지되므로 <strong>이 터미널은 열어 두고</strong> 다음 단계는 새 터미널에서 진행하세요. 먼저 Docker Desktop이 실행 중인지 확인하세요.</p>
+    </div>
+<pre><span class="b">make</span> start-dependencies         <span class="c"># MySQL :3306, Temporal UI :8080, Grafana, ...</span>
+<span class="c"># wait until the log settles (MySQL "ready for connections")</span></pre>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span> Install the schema <span class="ko">· 스키마 설치</span> <span class="term">Terminal 2</span></h2>
+    <div class="bil">
+      <p class="lang-en">Create the Temporal tables inside the freshly-started MySQL. Run this once (re-run any time you want a clean database).</p>
+      <p class="lang-ko">방금 실행한 MySQL 안에 Temporal 테이블을 생성합니다. 한 번만 실행하면 됩니다(데이터베이스를 초기화하고 싶을 때마다 다시 실행).</p>
+    </div>
+<pre><span class="b">cd</span> temporal
+<span class="b">make</span> install-schema-mysql        <span class="c"># creates the `temporal` + `temporal_visibility` DBs</span></pre>
+  </section>
+
+  <section>
+    <h2><span class="n">8</span> Run the debug server <span class="ko">· 디버그 서버 실행</span> <span class="term">Terminal 3</span></h2>
+    <div class="bil">
+      <p class="lang-en">Start the server you built, pointed at MySQL. It keeps running — leave it open.</p>
+      <p class="lang-ko">빌드한 서버를 MySQL을 향하도록 실행합니다. 계속 실행되므로 열어 두세요.</p>
+    </div>
+<pre>./temporal-server-debug \
+  --config-file config/development-mysql8.yaml \
+  --allow-no-auth start
+<span class="c"># gRPC on :7233 · Web UI on http://localhost:8080</span></pre>
+  </section>
+
+  <section>
+    <h2><span class="n">9</span> Verify everything works <span class="ko">· 정상 동작 확인</span> <span class="term">Terminal 4</span></h2>
+    <div class="bil">
+      <p class="lang-en">Create the default namespace, open the Web UI, and confirm <code class="inl">tdbg</code> can talk to the server.</p>
+      <p class="lang-ko">기본 네임스페이스를 만들고, 웹 UI를 열고, <code class="inl">tdbg</code>가 서버와 통신하는지 확인합니다.</p>
+    </div>
+<pre><span class="b">temporal</span> operator namespace create --namespace default
+<span class="c"># open the dashboard:  http://localhost:8080</span>
+./tdbg --address 127.0.0.1:7233 cluster describe   <span class="c"># should print cluster info</span></pre>
+    <div class="callout ok"><span class="h">Done / 완료</span>
+      <div class="bil">
+        <p class="lang-en">If the namespace is created, the UI loads, and <code class="inl">tdbg</code> responds, your environment is ready for the workshop. 🎉</p>
+        <p class="lang-ko">네임스페이스가 생성되고 UI가 열리며 <code class="inl">tdbg</code>가 응답하면, 워크숍을 위한 환경이 준비된 것입니다. 🎉</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">10</span> Troubleshooting <span class="ko">· 문제 해결</span></h2>
+    <table>
+      <thead><tr><th>Symptom / 증상</th><th>Fix / 해결</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inl">make: command not found</code></td><td>EN: Make isn't installed — see step 2. / KO: Make가 설치되지 않았습니다 — 2단계 참고.</td></tr>
+        <tr><td><code class="inl">Cannot connect to the Docker daemon</code></td><td>EN: Start Docker Desktop (or <code class="inl">sudo systemctl start docker</code> on Linux). / KO: Docker Desktop을 실행하세요(Linux는 <code class="inl">sudo systemctl start docker</code>).</td></tr>
+        <tr><td>Build fails on Go version / Go 버전 오류</td><td>EN: Ensure internet so Go can fetch the 1.26.4 toolchain; <code class="inl">go version</code> ≥ 1.21. / KO: 인터넷 연결 확인, <code class="inl">go version</code> 1.21 이상.</td></tr>
+        <tr><td><code class="inl">port ... already in use</code> (7233/8080/3306)</td><td>EN: Another Temporal/DB is running — stop it. / KO: 다른 Temporal/DB가 실행 중입니다 — 종료하세요.</td></tr>
+        <tr><td>WSL2 build extremely slow / WSL2 빌드가 매우 느림</td><td>EN: Clone under the Linux home <code class="inl">~</code>, never <code class="inl">/mnt/c/...</code>. / KO: <code class="inl">/mnt/c/...</code>가 아니라 Linux 홈 <code class="inl">~</code>에 클론하세요.</td></tr>
+        <tr><td>Docker runs out of memory / Docker 메모리 부족</td><td>EN: Raise Docker Desktop memory to ≥ 8 GB (Settings → Resources). / KO: Docker 메모리를 8GB 이상으로 올리세요.</td></tr>
+        <tr><td><code class="inl">temporal: command not found</code></td><td>EN: Temporal CLI is optional — install it (step 2) or use the Web UI. / KO: Temporal CLI는 선택 사항입니다 — 설치하거나 웹 UI를 쓰세요.</td></tr>
+      </tbody>
+    </table>
+    <h3>Teardown / 정리</h3>
+    <div class="bil">
+      <p class="lang-en">Press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the server terminal, then stop the Docker services:</p>
+      <p class="lang-ko">서버 터미널에서 <kbd>Ctrl</kbd>+<kbd>C</kbd>를 누른 뒤 Docker 서비스를 종료하세요:</p>
+    </div>
+<pre><span class="b">make</span> stop-dependencies</pre>
+  </section>
+
+  <footer>
+    <p class="bil"><span class="lang-en">Reference: the Temporal repo's <code class="inl">CONTRIBUTING.md</code> and <code class="inl">Makefile</code>. Go <code class="inl">1.26.4</code>, no C compiler required (<code class="inl">CGO_ENABLED=0</code>).</span>
+    <span class="lang-ko">참고: Temporal 저장소의 <code class="inl">CONTRIBUTING.md</code>와 <code class="inl">Makefile</code>. Go <code class="inl">1.26.4</code>, C 컴파일러 불필요(<code class="inl">CGO_ENABLED=0</code>).</span></p>
+  </footer>
+
+</div></div>
+</div>
+
+<script>
+  (function(){
+    var doc = document.getElementById('doc');
+    document.getElementById('os-seg').addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      doc.classList.remove('os-macos','os-linux'); doc.classList.add('os-'+b.dataset.os);
+      this.querySelectorAll('button').forEach(function(x){x.classList.toggle('on', x===b);});
+    });
+    document.getElementById('lang-seg').addEventListener('click', function(e){
+      var b = e.target.closest('button'); if(!b) return;
+      doc.classList.remove('show-both','show-en','show-ko'); doc.classList.add('show-'+b.dataset.lang);
+      this.querySelectorAll('button').forEach(function(x){x.classList.toggle('on', x===b);});
+    });
+  })();
+</script>
+</body>
+</html>
