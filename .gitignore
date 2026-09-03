@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Go — built binaries (source lives in worker/ and starter/ dirs)
+/go/worker/worker
+/go/starter/starter
+
+# Java (also covered by java/.gitignore)
+java/build/
+java/.gradle/
+
+# Editor
+*.swp

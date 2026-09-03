@@ -1,0 +1,56 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Worker (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/worker.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "TEMPORAL_DEBUG": "1"
+      }
+    },
+    {
+      "name": "Start: hello",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/starter.py",
+      "console": "integratedTerminal",
+      "args": ["--workflow", "hello", "--wait"]
+    },
+    {
+      "name": "Start: multiactivity",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/starter.py",
+      "console": "integratedTerminal",
+      "args": ["--workflow", "multiactivity", "--wait"]
+    },
+    {
+      "name": "Start: signal",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/starter.py",
+      "console": "integratedTerminal",
+      "args": ["--workflow", "signal"]
+    },
+    {
+      "name": "Start: nondeterminism",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/starter.py",
+      "console": "integratedTerminal",
+      "args": ["--workflow", "nondet"]
+    },
+    {
+      "name": "Start: versioned",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/starter.py",
+      "console": "integratedTerminal",
+      "args": ["--workflow", "versioned"]
+    }
+  ]
+}

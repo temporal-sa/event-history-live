@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Worker (debug)",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.WorkerApp",
+      "projectName": "workshop-hello",
+      "env": {
+        "TEMPORAL_DEBUG": "true"
+      }
+    },
+    {
+      "name": "Start: hello",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.Starter",
+      "projectName": "workshop-hello",
+      "args": ["hello"]
+    },
+    {
+      "name": "Start: multiactivity",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.Starter",
+      "projectName": "workshop-hello",
+      "args": ["multiactivity"]
+    },
+    {
+      "name": "Start: signal",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.Starter",
+      "projectName": "workshop-hello",
+      "args": ["signal"]
+    },
+    {
+      "name": "Start: nondeterminism",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.Starter",
+      "projectName": "workshop-hello",
+      "args": ["nondet"]
+    },
+    {
+      "name": "Start: versioned",
+      "type": "java",
+      "request": "launch",
+      "mainClass": "workshop.Starter",
+      "projectName": "workshop-hello",
+      "args": ["versioned"]
+    }
+  ]
+}

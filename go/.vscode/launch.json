@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Worker (debug)",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/worker",
+      "env": {
+        "TEMPORAL_DEBUG": "true"
+      }
+    },
+    {
+      "name": "Start: hello",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/starter",
+      "args": ["-workflow", "hello", "-wait"]
+    },
+    {
+      "name": "Start: multiactivity",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/starter",
+      "args": ["-workflow", "multiactivity", "-wait"]
+    },
+    {
+      "name": "Start: signal",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/starter",
+      "args": ["-workflow", "signal"]
+    },
+    {
+      "name": "Start: nondeterminism",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/starter",
+      "args": ["-workflow", "nondet"]
+    },
+    {
+      "name": "Start: versioned",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/starter",
+      "args": ["-workflow", "versioned"]
+    }
+  ]
+}

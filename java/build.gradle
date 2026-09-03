@@ -1,0 +1,31 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.temporal:temporal-sdk:1.25.0'
+    // Quiets SLF4J "no provider" warnings from the SDK.
+    implementation 'ch.qos.logback:logback-classic:1.5.6'
+}
+
+java {
+    // Compile with whatever JDK you have (17+), producing Java 17 bytecode so the app
+    // runs on Java 17 and newer. No toolchain auto-download required.
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+application {
+    // `gradle run` launches the worker; VSCode uses launch.json mainClass instead.
+    mainClass = 'workshop.WorkerApp'
+}
+
+tasks.register('runStarter', JavaExec) {
+    group = 'application'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'workshop.Starter'
+}
