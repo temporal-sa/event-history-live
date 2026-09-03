@@ -12,25 +12,23 @@ Cassandra's opaque wide rows).
 
 ---
 
-## Two repos: this one + a patched Temporal server
+## Two repos: this one + the Temporal server
 
 This repository holds the **workshop apps** (Go / Python / Java workflows), the `scripts/`
-toolkit, and the docs. The **Temporal server** they run against lives in a *separate*
-checkout of [temporalio/temporal](https://github.com/temporalio/temporal), because the
-demos need one small source patch so a breakpoint held in *workflow code* doesn't trip the
-server-side workflow-task timeout:
+toolkit, and the docs. The **Temporal server** they run against is built from a *separate*
+checkout of [temporalio/temporal](https://github.com/temporalio/temporal) — pulled straight
+from `main`, **no source changes needed**. You build it in **debug mode**
+(`make temporal-server-debug`), which relaxes the server's internal timeouts so a debugging
+session survives while you're paused at a breakpoint.
 
-| File (in the temporal checkout) | Change | Why |
-|------|--------|-----|
-| `service/history/api/create_workflow_util.go` | `maxWorkflowTaskStartToCloseTimeout`: `120s` → `15m` | Lets a workflow task be granted up to a 15-minute start-to-close timeout, so you can hold a breakpoint in workflow code. |
-
-The scripts locate that checkout via **`$TEMPORAL_SRC`** (default `~/temporal-oss/temporal`).
-Anything below that uses `make`, `tdbg`, the MySQL config, or the schema runs **in that
+Anything that uses `make`, `tdbg`, the MySQL config, or the schema runs **in the temporal
 checkout**; the worker, starters, and `scripts/` run **in this repo**.
+
+> Full clone-to-running-server walkthrough (all OSes): [`PREREQUISITES.md`](PREREQUISITES.md).
 
 ## Prerequisites
 
-- The **patched Temporal server checkout** (above), plus **make** + **Docker**.
+- The **Temporal server checkout** built in debug mode (above), plus **make** + **Docker**.
 - **Temporal CLI** — `brew install temporal` (create the namespace, send signals).
 - A toolchain for the demo you run: **Go 1.22+**, **Python 3.10+**, or **JDK 17+**
   (Java uses the bundled Gradle wrapper — nothing else to install).
@@ -56,7 +54,6 @@ Temporal server runs on your host, next.)
 ```bash
 make install-schema-mysql               # creates `temporal` + `temporal_visibility` DBs
 make temporal-server-debug              # builds with TEMPORAL_DEBUG tag → relaxed internal timeouts
-                                        # (also includes the 15m workflow-task cap change)
 ./temporal-server-debug \
   --config-file config/development-mysql8.yaml \
   --allow-no-auth start
@@ -64,10 +61,8 @@ make temporal-server-debug              # builds with TEMPORAL_DEBUG tag → rel
 
 **Why `temporal-server-debug` and not `make start-mysql`?** The debug binary is
 built with the `TEMPORAL_DEBUG` build tag, which multiplies internal server timeouts
-×100 — handy across a debugging session. It's compiled from the same source, so it
-also carries the 15-minute workflow-task cap. (The `120s` workflow-task max is the one
-thing the ×100 multiplier does *not* touch — that's why we changed the constant
-directly.)
+×100 — that slack keeps the server from giving up on a worker while you're stopped at a
+breakpoint across a debugging session.
 
 - gRPC: `7233` · HTTP: `7243` · UI: <http://localhost:8080>
 
@@ -96,7 +91,7 @@ for the worker-side settings Lab 3 needs.
 
 Ready-to-debug Hello World workflows live in this folder, one per SDK. Each has its own
 `.vscode/launch.json` with **"Worker (debug)"** and **"Start demo-wf"** configs, and is
-pre-wired with the breakpoint-friendly settings (15-min workflow-task timeout, deadlock
+pre-wired with the breakpoint-friendly settings (generous workflow-task timeout, deadlock
 detector off, 1-hour activity timeout).
 
 | Language | Folder | Setup |
@@ -208,17 +203,20 @@ workflow.ActivityOptions{
 }
 ```
 
-### Breakpoint in **workflow code** (needs all three)
+### Breakpoint in **workflow code**
 
-1. **Server cap** — already compiled in (`maxWorkflowTaskStartToCloseTimeout = 15m`).
-2. **Request it at start** (per-workflow, so you don't slow crashed-worker detection
-   for Labs 1 & 2):
+A workflow-code breakpoint has to beat the **workflow-task start-to-close timeout**. On a
+stock `main` server that's capped at **~2 minutes**, so this is the shorter leash — fine for
+stepping through logic, but for a long hold, put the breakpoint in an **activity** (above).
+
+1. **Request a generous timeout at start** (per-workflow, so you don't slow crashed-worker
+   detection for Labs 1 & 2):
    ```go
    client.StartWorkflowOptions{
-       WorkflowTaskTimeout: 15 * time.Minute,
+       WorkflowTaskTimeout: 2 * time.Minute,   // server caps at ~2m on stock main
    }
    ```
-3. **Disable the worker's deadlock detector** (SDK-side, else it panics
+2. **Disable the worker's deadlock detector** (SDK-side, else it panics
    "Potential deadlock detected" in ~1s):
    ```bash
    TEMPORAL_DEBUG=true ./your-worker
@@ -267,4 +265,4 @@ make install-schema-mysql    # re-creates a clean schema
 - Server config: `config/development-mysql8.yaml`
 - SQL schema: `schema/mysql/v8/temporal/`
 - Tools: `make temporal-sql-tool`, `make tdbg`
-- The one code change: `service/history/api/create_workflow_util.go` (`maxWorkflowTaskStartToCloseTimeout`)
+- Server build: `make temporal-server-debug` (from `temporalio/temporal` `main`, no patches)

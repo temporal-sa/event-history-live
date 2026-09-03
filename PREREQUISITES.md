@@ -109,8 +109,9 @@ docker compose version
 
 ## 3. Get the source code
 
-Clone the Temporal server repo. All later commands run from this folder. **On WSL2, clone
-inside the Linux home (`~`), not `/mnt/c`** — far faster.
+Clone the Temporal server repo and use `main` as-is — **no source changes needed**. All later
+commands run from this folder. **On WSL2, clone inside the Linux home (`~`), not `/mnt/c`** —
+far faster.
 
 ```bash
 git clone https://github.com/temporalio/temporal.git
@@ -119,37 +120,20 @@ cd temporal
 
 ---
 
-## 4. Apply the workshop patch
-
-> **Workshop-specific.** Raises the workflow-task timeout cap from 120 s to 15 min so you can
-> hold a breakpoint inside workflow code for up to 15 minutes. Skip for a plain debug build.
-
-```bash
-# macOS (BSD sed):
-sed -i '' 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-# Linux / WSL2 (GNU sed):
-sed -i 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-# verify:
-grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util.go
-# expected -> maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute
-```
-
----
-
-## 5. Build the binaries
+## 4. Build the binaries
 
 The **first build is slow** (downloads all Go packages, may fetch the Go 1.26.4 toolchain) —
 several minutes is normal. Later builds are fast.
 
 ```bash
-make temporal-server-debug     # -> ./temporal-server-debug
+make temporal-server-debug     # -> ./temporal-server-debug (debug build: relaxed internal timeouts)
 make tdbg                      # -> ./tdbg
 make temporal-sql-tool         # -> ./temporal-sql-tool (installs the DB schema)
 ```
+
+> **Why the debug build?** `make temporal-server-debug` compiles with the `TEMPORAL_DEBUG`
+> build tag, which multiplies the server's internal timeouts ×100 — that slack is what lets a
+> debugging session (and breakpoints) survive without the server giving up on the worker.
 
 **✔ Verify**
 
@@ -160,7 +144,7 @@ ls -la temporal-server-debug tdbg temporal-sql-tool   # three files should exist
 
 ---
 
-## 6. Start the databases — **Terminal 1**
+## 5. Start the databases — **Terminal 1**
 
 Starts MySQL, the Temporal Web UI, and more via Docker Compose. It keeps running — **leave this
 terminal open**. Make sure Docker Desktop is running first.
@@ -172,7 +156,7 @@ make start-dependencies         # MySQL :3306, Temporal UI :8080, Grafana, ...
 
 ---
 
-## 7. Install the schema — **Terminal 2**
+## 6. Install the schema — **Terminal 2**
 
 Create the Temporal tables in MySQL. Run once (re-run any time for a clean DB).
 
@@ -183,7 +167,7 @@ make install-schema-mysql        # creates the `temporal` + `temporal_visibility
 
 ---
 
-## 8. Run the debug server — **Terminal 3**
+## 7. Run the debug server — **Terminal 3**
 
 Start the server you built, pointed at MySQL. It keeps running — leave it open.
 
@@ -196,7 +180,7 @@ Start the server you built, pointed at MySQL. It keeps running — leave it open
 
 ---
 
-## 9. Verify everything works — **Terminal 4**
+## 8. Verify everything works — **Terminal 4**
 
 ```bash
 temporal operator namespace create --namespace default
@@ -209,7 +193,7 @@ temporal operator namespace create --namespace default
 
 ---
 
-## 10. Troubleshooting
+## 9. Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|

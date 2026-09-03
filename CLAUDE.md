@@ -19,17 +19,15 @@ The teaching arc:
 
 - **This repo** = the workshop apps, scripts, docs.
 - **A separate checkout of [temporalio/temporal](https://github.com/temporalio/temporal)** =
-  the server the demos run against. Scripts find it via **`$TEMPORAL_SRC`** (default
-  `~/temporal-oss/temporal`).
+  the server the demos run against. Pulled from `main` and built **as-is — no source patches**.
 
-### The required server patch (lives in the temporal checkout, NOT here)
-`service/history/api/create_workflow_util.go`:
-`maxWorkflowTaskStartToCloseTimeout` changed from **`120 * time.Second` → `15 * time.Minute`**.
-This raises the hard cap on the workflow-task timeout so a breakpoint held in *workflow code*
-can survive up to 15 min. It is a plain constant, not dynamic config — the only way to change
-it is editing the source and rebuilding. As of the migration this patch was **uncommitted** in
-the temporal checkout. Rebuild the server after patching: `make temporal-server` (or
-`make temporal-server-debug` for the ×100 internal-timeout debug build).
+### Build the server in debug mode (in the temporal checkout, NOT here)
+`make temporal-server-debug` compiles with the `TEMPORAL_DEBUG` build tag, which multiplies the
+server's internal timeouts ×100 — enough slack for a debugging session to survive while paused
+at a breakpoint. Note the `maxWorkflowTaskStartToCloseTimeout` cap (`120 * time.Second` on stock
+`main`) is a plain constant the ×100 multiplier does *not* touch, so a **workflow-code**
+breakpoint is bounded at ~2 min; **activity** breakpoints have no such cap (only their own
+`StartToCloseTimeout`), so they're the path for long holds.
 
 ## Datastore
 
@@ -72,8 +70,8 @@ marked block → restart → `scripts/signal-proceed.sh` → NDE (unversioned) o
   (Go worker also sets `DeadlockDetectionTimeout: 15m`); Python `debug_mode=True`.
 - **Python** also needs `UnsandboxedWorkflowRunner()` or breakpoints in `@workflow.run` never
   fire; launch config sets `justMyCode: false`.
-- **Timeouts**: starters set `WorkflowTaskTimeout: 15m` (needs the server patch); activities
-  set `StartToCloseTimeout: 1h` so activity-code breakpoints don't time out.
+- **Timeouts**: starters request a generous `WorkflowTaskTimeout` (the stock server caps it at
+  ~2 min); activities set `StartToCloseTimeout: 1h` so activity-code breakpoints don't time out.
 - Each language has `.vscode/launch.json` with `Worker (debug)` + `Start: <demo>` configs.
   Open the language sub-folder as the workspace root in Cursor/VSCode.
 
@@ -81,7 +79,7 @@ marked block → restart → `scripts/signal-proceed.sh` → NDE (unversioned) o
 
 `run-worker.sh <lang>` · `start.sh <lang> <demo> [args]` · `signal.sh` (+ `signal-proceed/add/done.sh`)
 · `history.sh` (tdbg decode) · `describe.sh` · `sql.sh q1|q2|q3|all` · `reset.sh`.
-`lib.sh` holds shared config and resolves `$TEMPORAL_SRC` (for `tdbg`) and the Gradle wrapper.
+`lib.sh` holds shared config and resolves the temporal checkout (for `tdbg`) and the Gradle wrapper.
 `start.sh <lang> multiactivity [a] [b] [id]`; other demos take `[name] [id]`.
 
 ## Docs
@@ -103,4 +101,5 @@ marked block → restart → `scripts/signal-proceed.sh` → NDE (unversioned) o
 ## Status at migration
 
 All three languages verified (Go builds, Python compiles, Java builds). Not yet run
-end-to-end against a live server. The server patch is uncommitted in the temporal checkout.
+end-to-end against a live server. The server is built from `temporalio/temporal` `main` in
+debug mode (`make temporal-server-debug`) — no source patches.

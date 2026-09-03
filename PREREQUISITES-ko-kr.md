@@ -110,7 +110,8 @@ docker compose version
 
 ## 3. 소스 코드 받기
 
-Temporal 서버 저장소를 클론합니다. 이후 모든 명령은 이 폴더에서 실행합니다.
+Temporal 서버 저장소를 클론하고 `main`을 그대로 사용합니다 — **소스 수정은 필요 없습니다**.
+이후 모든 명령은 이 폴더에서 실행합니다.
 **WSL2에서는 `/mnt/c`가 아니라 Linux 홈(`~`) 안에 클론하세요** — 훨씬 빠릅니다.
 
 ```bash
@@ -120,37 +121,20 @@ cd temporal
 
 ---
 
-## 4. 워크숍 패치 적용
-
-> **워크숍 전용.** 워크플로 태스크 타임아웃 상한을 120초에서 15분으로 올려, 워크플로 코드 안에서
-> 중단점을 최대 15분까지 유지할 수 있게 합니다. 일반 디버그 빌드만 원하면 건너뛰세요.
-
-```bash
-# macOS (BSD sed):
-sed -i '' 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-# Linux / WSL2 (GNU sed):
-sed -i 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-# 변경 확인:
-grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util.go
-# 예상 결과 -> maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute
-```
-
----
-
-## 5. 바이너리 빌드
+## 4. 바이너리 빌드
 
 **첫 빌드는 느립니다**(모든 Go 패키지를 내려받고 Go 1.26.4 툴체인을 가져올 수 있음) — 몇 분
 걸리는 것이 정상입니다. 이후 빌드는 빠릅니다.
 
 ```bash
-make temporal-server-debug     # -> ./temporal-server-debug
+make temporal-server-debug     # -> ./temporal-server-debug (디버그 빌드: 내부 타임아웃 완화)
 make tdbg                      # -> ./tdbg
 make temporal-sql-tool         # -> ./temporal-sql-tool (DB 스키마 설치용)
 ```
+
+> **디버그 빌드를 쓰는 이유?** `make temporal-server-debug`는 `TEMPORAL_DEBUG` 빌드 태그로
+> 컴파일되어 서버 내부 타임아웃을 ×100으로 늘립니다 — 이 여유 덕분에 디버깅 세션(과 중단점)
+> 동안 서버가 워커를 포기하지 않고 버틸 수 있습니다.
 
 **✔ 확인**
 
@@ -161,7 +145,7 @@ ls -la temporal-server-debug tdbg temporal-sql-tool   # 세 파일이 있어야 
 
 ---
 
-## 6. 데이터베이스 실행 — **터미널 1**
+## 5. 데이터베이스 실행 — **터미널 1**
 
 Docker Compose로 MySQL, Temporal 웹 UI 등을 실행합니다. 계속 실행되므로 **이 터미널은 열어
 두세요**. 먼저 Docker Desktop이 실행 중인지 확인하세요.
@@ -173,7 +157,7 @@ make start-dependencies         # MySQL :3306, Temporal UI :8080, Grafana, ...
 
 ---
 
-## 7. 스키마 설치 — **터미널 2**
+## 6. 스키마 설치 — **터미널 2**
 
 방금 실행한 MySQL 안에 Temporal 테이블을 생성합니다. 한 번만 실행하세요(초기화하려면 다시 실행).
 
@@ -184,7 +168,7 @@ make install-schema-mysql        # `temporal` + `temporal_visibility` DB 생성
 
 ---
 
-## 8. 디버그 서버 실행 — **터미널 3**
+## 7. 디버그 서버 실행 — **터미널 3**
 
 빌드한 서버를 MySQL을 향하도록 실행합니다. 계속 실행되므로 열어 두세요.
 
@@ -197,7 +181,7 @@ make install-schema-mysql        # `temporal` + `temporal_visibility` DB 생성
 
 ---
 
-## 9. 정상 동작 확인 — **터미널 4**
+## 8. 정상 동작 확인 — **터미널 4**
 
 ```bash
 temporal operator namespace create --namespace default
@@ -210,7 +194,7 @@ temporal operator namespace create --namespace default
 
 ---
 
-## 10. 문제 해결
+## 9. 문제 해결
 
 | 증상 | 해결 |
 |------|------|

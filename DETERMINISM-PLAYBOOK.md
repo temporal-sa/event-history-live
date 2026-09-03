@@ -22,7 +22,7 @@ the Go/Python/Java Hello World app).
 
 ## 0 · Pre-flight (do this before the audience is watching)
 
-- [ ] Workshop server running on MySQL with the 15-min cap (`README.md` → Quick start).
+- [ ] Workshop server (debug build) running on MySQL (`README.md` → Quick start).
 - [ ] `mysql` client window open and projected (Terminal D).
 - [ ] The demo app open in Cursor/VSCode (Go shown below; Python/Java equivalents in §6).
 - [ ] **Replace the workflow body with the blocking baseline** in §1 so the workflow parks

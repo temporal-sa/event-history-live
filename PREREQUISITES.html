@@ -222,39 +222,18 @@ sudo usermod -aG docker $USER      <span class="c"># then log out and back in</s
   <section>
     <h2><span class="n">3</span> Get the source code <span class="ko">· 소스 코드 받기</span></h2>
     <div class="bil">
-      <p class="lang-en">Clone the Temporal server repository and move into it. All later commands run from this folder. <strong>On WSL2, clone inside the Linux home (<code class="inl">~</code>), not <code class="inl">/mnt/c</code></strong> — it's far faster.</p>
-      <p class="lang-ko">Temporal 서버 저장소를 클론하고 그 폴더로 이동합니다. 이후 모든 명령은 이 폴더에서 실행합니다. <strong>WSL2에서는 <code class="inl">/mnt/c</code>가 아니라 Linux 홈(<code class="inl">~</code>) 안에 클론하세요</strong> — 훨씬 빠릅니다.</p>
+      <p class="lang-en">Clone the Temporal server repository and move into it — use <code class="inl">main</code> as-is, <strong>no source changes needed</strong>. All later commands run from this folder. <strong>On WSL2, clone inside the Linux home (<code class="inl">~</code>), not <code class="inl">/mnt/c</code></strong> — it's far faster.</p>
+      <p class="lang-ko">Temporal 서버 저장소를 클론하고 그 폴더로 이동합니다 — <code class="inl">main</code>을 그대로 사용하며 <strong>소스 수정은 필요 없습니다</strong>. 이후 모든 명령은 이 폴더에서 실행합니다. <strong>WSL2에서는 <code class="inl">/mnt/c</code>가 아니라 Linux 홈(<code class="inl">~</code>) 안에 클론하세요</strong> — 훨씬 빠릅니다.</p>
     </div>
 <pre><span class="b">git</span> clone https://github.com/temporalio/temporal.git
 <span class="b">cd</span> temporal</pre>
   </section>
 
   <section>
-    <h2><span class="n">4</span> Apply the workshop patch <span class="ko">· 워크숍 패치 적용</span></h2>
-    <div class="callout warn"><span class="h">Workshop-specific / 워크숍 전용</span>
-      <div class="bil">
-        <p class="lang-en">This one-line source change raises the workflow-task timeout cap from 120 s to 15 min, so you can hold a debugger breakpoint inside workflow code for up to 15 minutes. Skip it only if you want a plain debug build.</p>
-        <p class="lang-ko">이 한 줄짜리 소스 변경은 워크플로 태스크 타임아웃 상한을 120초에서 15분으로 올려, 워크플로 코드 안에서 디버거 중단점을 최대 15분까지 유지할 수 있게 합니다. 일반 디버그 빌드만 원하면 건너뛰어도 됩니다.</p>
-      </div>
-    </div>
-<pre><span class="c"># macOS (BSD sed):</span>
-sed -i '' 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-<span class="c"># Linux / WSL2 (GNU sed):</span>
-sed -i 's/maxWorkflowTaskStartToCloseTimeout = 120 \* time.Second/maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute/' \
-  service/history/api/create_workflow_util.go
-
-<span class="c"># verify the change:</span>
-grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util.go
-<span class="c"># expected -> maxWorkflowTaskStartToCloseTimeout = 15 * time.Minute</span></pre>
-  </section>
-
-  <section>
-    <h2><span class="n">5</span> Build the binaries <span class="ko">· 바이너리 빌드</span></h2>
+    <h2><span class="n">4</span> Build the binaries <span class="ko">· 바이너리 빌드</span></h2>
     <div class="bil">
-      <p class="lang-en">Build the debug server, <code class="inl">tdbg</code>, and the schema tool. The <strong>first build is slow</strong> (it downloads all Go packages and may fetch the Go 1.26.4 toolchain) — several minutes is normal. Later builds are fast.</p>
-      <p class="lang-ko">디버그 서버, <code class="inl">tdbg</code>, 스키마 도구를 빌드합니다. <strong>첫 빌드는 느립니다</strong>(모든 Go 패키지를 내려받고 Go 1.26.4 툴체인을 가져올 수 있음) — 몇 분 걸리는 것이 정상입니다. 이후 빌드는 빠릅니다.</p>
+      <p class="lang-en">Build the debug server, <code class="inl">tdbg</code>, and the schema tool. The debug build (<code class="inl">TEMPORAL_DEBUG</code> tag) multiplies the server's internal timeouts ×100, so a debugging session survives while you're paused at a breakpoint. The <strong>first build is slow</strong> (it downloads all Go packages and may fetch the Go 1.26.4 toolchain) — several minutes is normal. Later builds are fast.</p>
+      <p class="lang-ko">디버그 서버, <code class="inl">tdbg</code>, 스키마 도구를 빌드합니다. 디버그 빌드(<code class="inl">TEMPORAL_DEBUG</code> 태그)는 서버 내부 타임아웃을 ×100으로 늘려, 중단점에서 멈춰 있는 동안에도 디버깅 세션이 유지되도록 합니다. <strong>첫 빌드는 느립니다</strong>(모든 Go 패키지를 내려받고 Go 1.26.4 툴체인을 가져올 수 있음) — 몇 분 걸리는 것이 정상입니다. 이후 빌드는 빠릅니다.</p>
     </div>
 <pre><span class="b">make</span> temporal-server-debug     <span class="c"># -> ./temporal-server-debug</span>
 <span class="b">make</span> tdbg                       <span class="c"># -> ./tdbg</span>
@@ -265,7 +244,7 @@ grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util
   </section>
 
   <section>
-    <h2><span class="n">6</span> Start the databases <span class="ko">· 데이터베이스 실행</span> <span class="term">Terminal 1</span></h2>
+    <h2><span class="n">5</span> Start the databases <span class="ko">· 데이터베이스 실행</span> <span class="term">Terminal 1</span></h2>
     <div class="bil">
       <p class="lang-en">This starts MySQL, the Temporal Web UI, and other services with Docker Compose. It keeps running — <strong>leave this terminal open</strong> and open a new one for the next steps. Make sure Docker Desktop is running first.</p>
       <p class="lang-ko">Docker Compose로 MySQL, Temporal 웹 UI 등을 실행합니다. 계속 실행 상태로 유지되므로 <strong>이 터미널은 열어 두고</strong> 다음 단계는 새 터미널에서 진행하세요. 먼저 Docker Desktop이 실행 중인지 확인하세요.</p>
@@ -275,7 +254,7 @@ grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util
   </section>
 
   <section>
-    <h2><span class="n">7</span> Install the schema <span class="ko">· 스키마 설치</span> <span class="term">Terminal 2</span></h2>
+    <h2><span class="n">6</span> Install the schema <span class="ko">· 스키마 설치</span> <span class="term">Terminal 2</span></h2>
     <div class="bil">
       <p class="lang-en">Create the Temporal tables inside the freshly-started MySQL. Run this once (re-run any time you want a clean database).</p>
       <p class="lang-ko">방금 실행한 MySQL 안에 Temporal 테이블을 생성합니다. 한 번만 실행하면 됩니다(데이터베이스를 초기화하고 싶을 때마다 다시 실행).</p>
@@ -285,7 +264,7 @@ grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util
   </section>
 
   <section>
-    <h2><span class="n">8</span> Run the debug server <span class="ko">· 디버그 서버 실행</span> <span class="term">Terminal 3</span></h2>
+    <h2><span class="n">7</span> Run the debug server <span class="ko">· 디버그 서버 실행</span> <span class="term">Terminal 3</span></h2>
     <div class="bil">
       <p class="lang-en">Start the server you built, pointed at MySQL. It keeps running — leave it open.</p>
       <p class="lang-ko">빌드한 서버를 MySQL을 향하도록 실행합니다. 계속 실행되므로 열어 두세요.</p>
@@ -297,7 +276,7 @@ grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util
   </section>
 
   <section>
-    <h2><span class="n">9</span> Verify everything works <span class="ko">· 정상 동작 확인</span> <span class="term">Terminal 4</span></h2>
+    <h2><span class="n">8</span> Verify everything works <span class="ko">· 정상 동작 확인</span> <span class="term">Terminal 4</span></h2>
     <div class="bil">
       <p class="lang-en">Create the default namespace, open the Web UI, and confirm <code class="inl">tdbg</code> can talk to the server.</p>
       <p class="lang-ko">기본 네임스페이스를 만들고, 웹 UI를 열고, <code class="inl">tdbg</code>가 서버와 통신하는지 확인합니다.</p>
@@ -314,7 +293,7 @@ grep maxWorkflowTaskStartToCloseTimeout service/history/api/create_workflow_util
   </section>
 
   <section>
-    <h2><span class="n">10</span> Troubleshooting <span class="ko">· 문제 해결</span></h2>
+    <h2><span class="n">9</span> Troubleshooting <span class="ko">· 문제 해결</span></h2>
     <table>
       <thead><tr><th>Symptom / 증상</th><th>Fix / 해결</th></tr></thead>
       <tbody>
