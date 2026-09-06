@@ -33,15 +33,17 @@ registers the `*Impl` classes; clients talk to the interface.
 
 ```
 src/main/java/workshop/
-  GreetingActivities.java       # @ActivityInterface — the activity method signatures
-  GreetingActivitiesImpl.java   #   their implementations (composeGreeting, add, doubleValue, …)
+  GreetingActivities.java       # @ActivityInterface — string composition ┐ activity
+  GreetingActivitiesImpl.java   #   composeGreeting / composeFarewell     ┘ signatures
+  MathActivities.java           # @ActivityInterface — arithmetic         ┐ + their
+  MathActivitiesImpl.java       #   add / doubleValue / square            ┘ implementations
   GreetingWorkflow.java         # @WorkflowInterface  ┐  Hello demo
   GreetingWorkflowImpl.java     #   implementation    ┘
   PipelineWorkflow(+Impl).java  # math pipeline: 2*(a+b)
   ApprovalWorkflow(+Impl).java  # signal demo: collect approvers
   NonDeterminismWorkflow(+Impl) # non-determinism demo
   VersionedWorkflow(+Impl)      # versioned (safe) demo
-  GreetingInput / MathInput / DoubleInput .java   # payload structs (one per workflow input)
+  GreetingInput / MathInput / DoubleInput / SquareInput .java   # payload structs
   WorkerApp.java                # registers everything, starts the worker
   Starter.java                  # starts a chosen workflow
 ```
@@ -65,7 +67,8 @@ You need **two** things running: the **worker** (executes workflow/activity code
 
 ### From the IDE (best for breakpoints)
 1. Make sure the workshop server + MySQL are running (see [`../README.md`](../README.md)).
-2. Set a breakpoint (e.g. in `GreetingActivitiesImpl.composeGreeting`).
+2. Set a breakpoint (e.g. in `GreetingActivitiesImpl.composeGreeting`, or
+   `MathActivitiesImpl.add` for the math demos).
 3. Run **"Worker (debug)"** from the Run and Debug panel (▶). It sets `TEMPORAL_DEBUG=true`
    so breakpoints in workflow code don't trip the deadlock detector.
 4. Run a **"Start: …"** config (e.g. **"Start: hello"**).
@@ -81,7 +84,7 @@ You need **two** things running: the **worker** (executes workflow/activity code
 ./gradlew runStarter --args="hello Temporal"          # hello
 ./gradlew runStarter --args="multiactivity 3 4"       # math pipeline -> 2*(3+4)=14
 ./gradlew runStarter --args="signal Temporal"         # approval (drive it with scripts/signal-add.sh)
-./gradlew runStarter --args="nondet Temporal"         # non-determinism demo
+./gradlew runStarter --args="nondet 3 4"              # non-determinism demo
 #   ...or from the repo's scripts:  scripts/start.sh java multiactivity 3 4
 ```
 

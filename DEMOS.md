@@ -26,7 +26,7 @@ run **"Worker (debug)"**, then run the matching **"Start: <demo>"** launch confi
 **From the terminal (best for the non-determinism demo).**
 ```bash
 scripts/run-worker.sh <go|python|java>          # start the worker (Ctrl-C to kill)
-scripts/start.sh <lang> <demo> [name] [id]      # start a workflow
+scripts/start.sh <lang> <demo> [args...]        # start a workflow (see table below)
 ```
 > Java from the terminal needs `gradle` on PATH (`brew install gradle`); otherwise use the
 > IDE launch configs. Go and Python work out of the box.
@@ -40,7 +40,8 @@ All scripts live in `scripts/` and default to workflow id `demo-wf`.
 | Script | What it does |
 |--------|--------------|
 | `run-worker.sh <lang>` | Run a language's worker in the terminal |
-| `start.sh <lang> <demo> [name] [id]` | Start a workflow (`hello`/`multiactivity`/`signal`/`nondet`/`versioned`) |
+| `start.sh <lang> <hello\|signal> [name] [id]` | Start a greeting/approval workflow |
+| `start.sh <lang> <multiactivity\|nondet\|versioned> [a] [b] [id]` | Start a math workflow |
 | `signal.sh <name> [payload] [id]` | Send any signal |
 | `signal-proceed.sh [id]` | Unpark a nondet/versioned demo (`proceed`) |
 | `signal-add.sh <name> [id]` | Add an approver to the signal demo (`add`) |
@@ -100,17 +101,25 @@ scripts/describe.sh                        # status Completed
 
 ## Demo 3 — Non-determinism (watch a workflow wedge)
 
-`NonDeterminismWorkflow` runs one activity, then parks on `proceed`. A commented-out second
-activity sits **before** the park. Uncommenting it changes the recorded command sequence.
+`NonDeterminismWorkflow` is `Add(a,b)` → **[commented `Double`]** → park on `proceed` → `Square`.
+With `a=3 b=4` it returns `7^2` = **49**. A commented-out `Double` sits **between `Add` and the
+park**; uncommenting it changes the recorded command sequence.
+
+The park is an await **with a 1h timeout**, so it records a `TimerStarted` event. That matters:
+non-determinism is only detected when a replayed command *contradicts a command already in
+history*. A bare signal wait records nothing, and a new activity inserted before it would just
+append past the end of history and complete happily. The timer is what the new `Double` collides
+with.
 
 ```bash
-# 1. Start it — runs ComposeGreeting, then parks.
-scripts/start.sh go nondet
-scripts/history.sh                         # history stops after the first activity
+# 1. Start it — runs Add, then parks (with a pending timer).
+scripts/start.sh go nondet 3 4
+scripts/history.sh                         # history stops after Add + TimerStarted
+scripts/sql.sh q3                          # the pending timer, in timer_info_maps
 
 # 2. Kill the worker (Ctrl-C in its terminal).
 
-# 3. In nondeterminism.go, UNCOMMENT the marked block (the second activity).
+# 3. In nondeterminism.go, UNCOMMENT the marked block (the Double activity).
 
 # 4. Restart the worker:
 scripts/run-worker.sh go
@@ -119,7 +128,8 @@ scripts/run-worker.sh go
 scripts/signal-proceed.sh
 
 # 6. Observe the failure:
-scripts/history.sh demo-wf WorkflowTaskFailed   # non-determinism error, retrying
+scripts/history.sh demo-wf WorkflowTaskFailed   # "history event is TimerStarted, but no
+                                                # matching command found" — retrying
 scripts/describe.sh                             # still Running — WEDGED, not corrupted
 ```
 
@@ -130,24 +140,25 @@ and parks it safely until you ship code that replays cleanly. That's Demo 4.
 
 ## Demo 4 — Versioned (the safe fix)
 
-`VersionedWorkflow` is identical, but its commented block wraps the second activity in
+`VersionedWorkflow` is identical, but its commented block wraps the `Double` in
 `GetVersion` (Go/Java) / `patched` (Python). Run Demo 3's steps against `versioned`:
 
 ```bash
-scripts/start.sh go versioned              # parks on proceed
+scripts/start.sh go versioned 3 4          # parks on proceed
 # kill worker → UNCOMMENT the block in versioned.go → restart worker
 scripts/run-worker.sh go
-scripts/signal-proceed.sh                  # replays cleanly, COMPLETES
+scripts/signal-proceed.sh                  # replays cleanly, COMPLETES with 49
 scripts/describe.sh                        # status Completed
 ```
 
 The old in-flight workflow finds **no version marker** in its history → takes the
-`DefaultVersion` path → skips the new activity → replay matches → it completes. Then start a
-**fresh** versioned workflow and compare:
+`DefaultVersion` path → skips the `Double` → replay matches → it completes with **49**. Then start
+a **fresh** versioned workflow and compare:
 
 ```bash
-scripts/start.sh go versioned Temporal demo-wf-2
-scripts/history.sh demo-wf-2 MarkerRecorded   # the NEW run records a version marker + runs the activity
+scripts/start.sh go versioned 3 4 demo-wf-2
+scripts/history.sh demo-wf-2 MarkerRecorded   # the NEW run records a version marker, runs Double,
+                                              # and returns (2*7)^2 = 196
 ```
 
 **Teaching point:** one codebase, two behaviors keyed on a marker in history — old executions
@@ -165,6 +176,6 @@ production without draining them.
 
 ```bash
 scripts/reset.sh                    # terminate demo-wf
-# or start with a different id:  scripts/start.sh go nondet Temporal demo-wf-3
+# or start with a different id:  scripts/start.sh go nondet 3 4 demo-wf-3
 # or wipe everything:            make install-schema-mysql
 ```

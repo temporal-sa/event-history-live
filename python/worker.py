@@ -3,7 +3,8 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-from activities import compose_greeting, compose_farewell, add, double
+from greeting_activities import compose_greeting, compose_farewell
+from math_activities import add, double, square
 from workflows import (
     GreetingWorkflow,
     PipelineWorkflow,
@@ -29,7 +30,7 @@ async def main() -> None:
             NonDeterminismWorkflow,
             VersionedWorkflow,
         ],
-        activities=[compose_greeting, compose_farewell, add, double],
+        activities=[compose_greeting, compose_farewell, add, double, square],
         # debug_mode routes workflow activations onto the main asyncio thread and
         # disables the deadlock detector, so breakpoints in WORKFLOW code fire.
         # (Setting env var TEMPORAL_DEBUG=1 does the same — see .vscode/launch.json.)

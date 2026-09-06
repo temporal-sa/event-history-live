@@ -20,6 +20,8 @@ public class GreetingWorkflowImpl implements GreetingWorkflow {
         // >>> BREAKPOINT (workflow code): pause here to inspect the DB mid-task. <<<
         // Requires TEMPORAL_DEBUG=true on the worker (see .vscode/launch.json) so
         // the deadlock detector doesn't fire.
-        return activities.composeGreeting(in);
+        String greeting = activities.composeGreeting(in);
+        // >>> BREAKPOINT (workflow): the activity result is inspectable here. <<<
+        return greeting;
     }
 }

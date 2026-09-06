@@ -3,6 +3,7 @@ package workshop;
 import io.temporal.activity.ActivityInterface;
 import io.temporal.activity.ActivityMethod;
 
+/** String-composition activities (the greeting demos). */
 @ActivityInterface
 public interface GreetingActivities {
     @ActivityMethod
@@ -10,10 +11,4 @@ public interface GreetingActivities {
 
     @ActivityMethod
     String composeFarewell(GreetingInput in);
-
-    @ActivityMethod
-    int add(MathInput in);
-
-    @ActivityMethod
-    int doubleValue(DoubleInput in);
 }

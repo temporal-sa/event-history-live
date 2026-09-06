@@ -25,5 +25,6 @@ func PipelineWorkflow(ctx workflow.Context, in MathInput) (int, error) {
 		return 0, err
 	}
 
+	// >>> BREAKPOINT (workflow): inspect sum and doubled here. <<<
 	return doubled, nil
 }

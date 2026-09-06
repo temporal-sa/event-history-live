@@ -35,6 +35,7 @@ func main() {
 	w.RegisterActivity(hello.ComposeFarewell)
 	w.RegisterActivity(hello.Add)
 	w.RegisterActivity(hello.Double)
+	w.RegisterActivity(hello.Square)
 
 	log.Println("Worker started on task queue:", hello.TaskQueue)
 	if err := w.Run(worker.InterruptCh()); err != nil {

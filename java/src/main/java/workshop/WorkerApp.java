@@ -23,7 +23,8 @@ public class WorkerApp {
             ApprovalWorkflowImpl.class,
             NonDeterminismWorkflowImpl.class,
             VersionedWorkflowImpl.class);
-        worker.registerActivitiesImplementations(new GreetingActivitiesImpl());
+        worker.registerActivitiesImplementations(
+            new GreetingActivitiesImpl(), new MathActivitiesImpl());
 
         System.out.println("Worker started on task queue: " + TASK_QUEUE);
         factory.start();

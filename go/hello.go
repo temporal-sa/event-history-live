@@ -1,7 +1,6 @@
 package hello
 
 import (
-	"context"
 	"time"
 
 	"go.temporal.io/sdk/workflow"
@@ -30,13 +29,7 @@ func GreetingWorkflow(ctx workflow.Context, in GreetingInput) (string, error) {
 		return "", err
 	}
 
+	// >>> BREAKPOINT (workflow): the activity result is inspectable here. <<<
 	logger.Info("GreetingWorkflow completed", "greeting", greeting)
 	return greeting, nil
-}
-
-// ComposeGreeting is the activity. Breakpoint here for the clean Lab 3 pause —
-// activities have no deadlock detector and no workflow-task timeout.
-func ComposeGreeting(ctx context.Context, in GreetingInput) (string, error) {
-	// >>> BREAKPOINT (activity code): recommended pause point. <<<
-	return "Hello, " + in.Name + "!", nil
 }

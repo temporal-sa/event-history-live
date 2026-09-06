@@ -7,7 +7,7 @@ import io.temporal.workflow.WorkflowMethod;
 @WorkflowInterface
 public interface NonDeterminismWorkflow {
     @WorkflowMethod
-    String run(GreetingInput in);
+    int run(MathInput in);
 
     @SignalMethod
     void proceed();

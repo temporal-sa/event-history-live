@@ -38,7 +38,9 @@ async def main() -> None:
 
     client = await Client.connect("localhost:7233", namespace="default")
 
-    arg = MathInput(a=args.a, b=args.b) if args.workflow == "multiactivity" else GreetingInput(name=args.name)
+    # The math demos take MathInput; the greeting/approval demos take GreetingInput.
+    math_demo = args.workflow in ("multiactivity", "nondet", "versioned")
+    arg = MathInput(a=args.a, b=args.b) if math_demo else GreetingInput(name=args.name)
 
     handle = await client.start_workflow(
         run,

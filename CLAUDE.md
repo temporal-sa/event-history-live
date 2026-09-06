@@ -45,10 +45,19 @@ Three teaching queries (see `scripts/sql.sh` and `README.md`):
 - One **worker per language**, one task queue each: `hello-go` / `hello-python` / `hello-java`.
   Each worker registers all 5 workflows. Default workflow id: `demo-wf`.
 - **Single-struct payloads** (Temporal best practice — evolve without breaking signatures):
-  `GreetingInput{name}`, `MathInput{a,b}`, `DoubleInput{value}`.
+  `GreetingInput{name}`, `MathInput{a,b}`, `DoubleInput{value}`, `SquareInput{value}`.
 - **Signals**: `proceed` (nondet/versioned), `add`(string approver) + `done` (approval demo).
 - **Operations are deliberately primitive & visualizable**, one per category:
   arithmetic (math pipeline), string concat (greeting), array manipulation (approval).
+- **Never `return` an activity result directly** — hoist it into a local first
+  (`int squared = activities.square(...); return squared;`). A direct return gives the
+  workshop audience nowhere to stand: you can't inspect the computed value at a breakpoint.
+  Each such local is followed by a `>>> BREAKPOINT (workflow): inspect ... <<<` marker, and
+  the markers line up across the three languages.
+- **Activities are grouped by domain, not dumped in one bag.** Go `greeting_activities.go` /
+  `math_activities.go`; Python `greeting_activities.py` / `math_activities.py`; Java
+  `GreetingActivities(+Impl)` (`composeGreeting`/`composeFarewell`) and `MathActivities(+Impl)`
+  (`add`/`doubleValue`/`square`). The Java worker registers **both** impls.
 
 ### The 5 demos
 | Key | Workflow | Operation |
@@ -56,13 +65,24 @@ Three teaching queries (see `scripts/sql.sh` and `README.md`):
 | `hello` | `GreetingWorkflow` | `ComposeGreeting` → `"Hello, {name}!"` |
 | `multiactivity` | `PipelineWorkflow` | `Add(a,b)` → `Double(sum)` = **2*(a+b)** |
 | `signal` | `ApprovalWorkflow` | `add`/`done` signals accumulate an approver array |
-| `nondet` | `NonDeterminismWorkflow` | 1 activity + a **commented** 2nd activity before a signal park |
-| `versioned` | `VersionedWorkflow` | same, but the commented block is gated by `GetVersion`/`patched` |
+| `nondet` | `NonDeterminismWorkflow` | `Add(a,b)` → *[commented `Double`]* → signal park → `Square` |
+| `versioned` | `VersionedWorkflow` | same, but the commented `Double` is gated by `GetVersion`/`patched` |
 
 The nondet/versioned demo flow: start → parks on `proceed` → kill worker → **uncomment** the
 marked block → restart → `scripts/signal-proceed.sh` → NDE (unversioned) or clean completion
-(versioned). Activities named per-language: Go `Add`/`Double`, Python `add`/`double`, Java
-`add`/`doubleValue` (`double` is a Java keyword).
+(versioned). With `a=3 b=4`: unversioned baseline / versioned old run = `7^2` = **49**; a fresh
+versioned run = `(2*7)^2` = **196**. Activities named per-language: Go `Add`/`Double`/`Square`,
+Python `add`/`double`/`square`, Java `add`/`doubleValue`/`square` (`double` is a Java keyword).
+
+**IMPORTANT — why the park uses a timer.** The park is `AwaitWithTimeout` / `Workflow.await(1h,…)`
+/ `wait_condition(…, timeout=1h)`, **not** a bare signal wait. Non-determinism is only detected
+when a replayed command *contradicts a command already recorded in history*. A bare await records
+no command, so history ends with a command-less `WorkflowTaskCompleted` and a newly inserted
+activity just appends past the end of recorded history — indistinguishable from normal progress,
+and the workflow completes happily (this was a real bug in the first cut of these demos). The
+timeout records a `TimerStarted` event, which is the recorded command the uncommented `Double`
+collides with. Keep the commented block **between `Add` and the park**; moving it after the park
+breaks the demo again.
 
 ## Debugging settings (already wired into the apps + launch configs)
 
@@ -80,7 +100,7 @@ marked block → restart → `scripts/signal-proceed.sh` → NDE (unversioned) o
 `run-worker.sh <lang>` · `start.sh <lang> <demo> [args]` · `signal.sh` (+ `signal-proceed/add/done.sh`)
 · `history.sh` (tdbg decode) · `describe.sh` · `sql.sh q1|q2|q3|all` · `reset.sh`.
 `lib.sh` holds shared config and resolves the temporal checkout (for `tdbg`) and the Gradle wrapper.
-`start.sh <lang> multiactivity [a] [b] [id]`; other demos take `[name] [id]`.
+`start.sh <lang> <multiactivity|nondet|versioned> [a] [b] [id]`; `hello`/`signal` take `[name] [id]`.
 
 ## Docs
 

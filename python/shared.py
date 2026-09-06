@@ -15,3 +15,8 @@ class MathInput:
 @dataclass
 class DoubleInput:
     value: int
+
+
+@dataclass
+class SquareInput:
+    value: int

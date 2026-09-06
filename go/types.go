@@ -15,3 +15,8 @@ type MathInput struct {
 type DoubleInput struct {
 	Value int `json:"value"`
 }
+
+// SquareInput is the single input payload for the Square activity.
+type SquareInput struct {
+	Value int `json:"value"`
+}

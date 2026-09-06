@@ -17,7 +17,12 @@ public class Starter {
         WorkflowExecution execution;
         String id;
 
-        if (type.equals("multiactivity")) {
+        // The math demos (multiactivity, nondet, versioned) take MathInput and the
+        // operands as args; the greeting/approval demos take GreetingInput and a name.
+        boolean mathDemo =
+            type.equals("multiactivity") || type.equals("nondet") || type.equals("versioned");
+
+        if (mathDemo) {
             int a = args.length > 1 ? Integer.parseInt(args[1]) : 3;
             int b = args.length > 2 ? Integer.parseInt(args[2]) : 4;
             id = args.length > 3 ? args[3] : "demo-wf";
@@ -29,8 +34,27 @@ public class Starter {
                     .setWorkflowTaskTimeout(Duration.ofMinutes(15))
                     .build();
 
-            PipelineWorkflow stub = client.newWorkflowStub(PipelineWorkflow.class, options);
-            execution = WorkflowClient.start(stub::run, new MathInput(a, b));
+            switch (type) {
+                case "nondet": {
+                    NonDeterminismWorkflow stub =
+                        client.newWorkflowStub(NonDeterminismWorkflow.class, options);
+                    execution = WorkflowClient.start(stub::run, new MathInput(a, b));
+                    break;
+                }
+                case "versioned": {
+                    VersionedWorkflow stub =
+                        client.newWorkflowStub(VersionedWorkflow.class, options);
+                    execution = WorkflowClient.start(stub::run, new MathInput(a, b));
+                    break;
+                }
+                case "multiactivity":
+                default: {
+                    PipelineWorkflow stub =
+                        client.newWorkflowStub(PipelineWorkflow.class, options);
+                    execution = WorkflowClient.start(stub::run, new MathInput(a, b));
+                    break;
+                }
+            }
         } else {
             String name = args.length > 1 ? args[1] : "Temporal";
             id = args.length > 2 ? args[2] : "demo-wf";
@@ -49,18 +73,6 @@ public class Starter {
                 case "signal": {
                     ApprovalWorkflow stub =
                         client.newWorkflowStub(ApprovalWorkflow.class, options);
-                    execution = WorkflowClient.start(stub::run, new GreetingInput(name));
-                    break;
-                }
-                case "nondet": {
-                    NonDeterminismWorkflow stub =
-                        client.newWorkflowStub(NonDeterminismWorkflow.class, options);
-                    execution = WorkflowClient.start(stub::run, new GreetingInput(name));
-                    break;
-                }
-                case "versioned": {
-                    VersionedWorkflow stub =
-                        client.newWorkflowStub(VersionedWorkflow.class, options);
                     execution = WorkflowClient.start(stub::run, new GreetingInput(name));
                     break;
                 }

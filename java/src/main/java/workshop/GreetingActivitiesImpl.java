@@ -13,16 +13,4 @@ public class GreetingActivitiesImpl implements GreetingActivities {
         // >>> BREAKPOINT (activity) <<<
         return "Goodbye, " + in.name + "!";
     }
-
-    @Override
-    public int add(MathInput in) {
-        // >>> BREAKPOINT (activity) <<<
-        return in.a + in.b;
-    }
-
-    @Override
-    public int doubleValue(DoubleInput in) {
-        // >>> BREAKPOINT (activity) <<<
-        return in.value * 2;
-    }
 }

@@ -15,8 +15,8 @@ func main() {
 	workflowName := flag.String("workflow", "hello", "workflow to start: hello, multiactivity, signal, nondet, versioned")
 	id := flag.String("id", "demo-wf", "workflow ID")
 	name := flag.String("name", "Temporal", "name argument passed to the workflow")
-	a := flag.Int("a", 3, "first operand for the multiactivity math pipeline")
-	b := flag.Int("b", 4, "second operand for the multiactivity math pipeline")
+	a := flag.Int("a", 3, "first operand for the math demos (multiactivity, nondet, versioned)")
+	b := flag.Int("b", 4, "second operand for the math demos (multiactivity, nondet, versioned)")
 	wait := flag.Bool("wait", false, "wait for the workflow result")
 	flag.Parse()
 
@@ -48,8 +48,15 @@ func main() {
 		WorkflowTaskTimeout: 15 * time.Minute,
 	}
 
+	// The math demos take MathInput; the greeting/approval demos take GreetingInput.
+	mathDemo := false
+	switch *workflowName {
+	case "multiactivity", "nondet", "versioned":
+		mathDemo = true
+	}
+
 	var input interface{}
-	if *workflowName == "multiactivity" {
+	if mathDemo {
 		input = hello.MathInput{A: *a, B: *b}
 	} else {
 		input = hello.GreetingInput{Name: *name}
@@ -63,7 +70,7 @@ func main() {
 	log.Printf("Started %s WorkflowID=%s RunID=%s", *workflowName, we.GetID(), we.GetRunID())
 
 	if *wait {
-		if *workflowName == "multiactivity" {
+		if mathDemo {
 			var r int
 			if err := we.Get(ctx, &r); err != nil {
 				log.Fatalln("unable to get workflow result:", err)

@@ -17,7 +17,8 @@ Select the `.venv` interpreter (Command Palette → "Python: Select Interpreter"
 
 1. Make sure the workshop server + MySQL are running (see `../README.md`).
 2. Set a breakpoint:
-   - **Recommended (Lab 3):** inside `compose_greeting` in `activities.py`.
+   - **Recommended (Lab 3):** inside `compose_greeting` in `greeting_activities.py`
+     (arithmetic activities live in `math_activities.py`).
    - **Workflow code:** on the `execute_activity` line in `workflows.py`.
 3. Run **"Worker (debug)"** from the Run and Debug panel (▶). It uses
    `debug_mode=True` + `UnsandboxedWorkflowRunner()` so breakpoints in workflow
